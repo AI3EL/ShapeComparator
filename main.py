@@ -1,57 +1,93 @@
+import random
+
 import numpy as np
 from scipy import linalg
 
-class Point:
+# max is not included : last interval is [max-2*step, max-step]
+class Histogram :
+    def __init__(self, step, min, max):
+        assert(self.max - self.min) % step == 0
+        self.step = step
+        self.min = min
+        self.max = max
+        self.size = (self.max - self.min) // step
+        self.occurences = [0] * self.size
+
+    def get_occurence(self, v):
+        return self.occurences[self.step * (v-self.min) // self.step]
+
+    def add_occurence(self, v, n=1):
+        self.occurences[self.step * (v - self.min) // self.step] += n
+
+    @staticmethod
+    def dist(h1, h2):
+        assert h1.step == h2.step
+        min = max(h1.min, h2.min)
+        max = min(h1.max, h2.max)
+        return sum([(h1.get_occurence(i) - h2.get_occurence(i))**2 for i in range(min, max, h1.step)])**0.5
+
+class Point :
     def __init__(self, coord):
-        self.x = coord[0]
-        self.y = coord[1]
-        self.z = coord[2]
         self.coord = coord
+        self.dim = len(coord)
 
     @staticmethod
     def dist(a, b):
-        return ((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2) ** 0.5
-
-    @staticmethod
-    def cross(a, b):
-        return Point([a.y * b.z - a.z * b.y, b.x * a.z - b.z * a.x, a.x * b.y - a.y * b.x])
+        assert a.dim == b.dim
+        return sum([(a.coord[i] - b.coord[i]) ** 2 for i in range(a.dim)]) ** 0.5
 
     @staticmethod
     def scal(a, b):
-        return sum([a.coord[i] * b.coord[i] for i in range(3)])
+        assert a.dim == b.dim
+        return sum([a.coord[i] * b.coord[i] for i in range(a.dim)])
 
     def norm(self):
-        return Point.dist(self, Point([0, 0, 0]))
+        return Point.dist(self, Point([0] * self.dim))
 
     def opp(self):
-        return Point([-self.coord[i] for i in range(3)])
+        return Point([-self.coord[i] for i in range(self.dim)])
 
     def unit(self):
-        norm = Point.dist(self, Point([0, 0, 0]))
-        return Point([self.coord[i] / norm for i in range(3)])
+        norm = self.norm()
+        return Point([self.coord[i] / norm for i in range(self.dim)])
 
     def __add__(self, other):
-        return Point([self.coord[i] + other.coord[i] for i in range(3)])
+        assert self.dim == other.dim
+        return Point([self.coord[i] + other.coord[i] for i in range(self.dim)])
 
     def __radd__(self, other):
         return self + other
 
     def __sub__(self, other):
-        return Point([self.coord[i] - other.coord[i] for i in range(3)])
+        assert self.dim == other.dim
+        return Point([self.coord[i] - other.coord[i] for i in range(self.dim)])
 
     def __rsub__(self, other):
         return (other - self).opp()
 
     def __truediv__(self, scal):
         assert type(scal) in [float, int]
-        return Point([self.coord[i] / scal for i in range(3)])
+        return Point([self.coord[i] / scal for i in range(self.dim)])
 
     def __mul__(self, scal):
         assert type(scal) in [float, int]
-        return Point([self.coord[i] * scal for i in range(3)])
+        return Point([self.coord[i] * scal for i in range(self.dim)])
 
     def __rmul__(self, other):
         return self * other
+
+class Point3(Point):
+    def __init__(self, coord):
+        assert len(coord) == 3
+        super().__init__(coord)
+        self.x = coord[0]
+        self.y = coord[1]
+        self.z = coord[2]
+
+    @staticmethod
+    def cross(a, b):
+        return Point([a.y * b.z - a.z * b.y, b.x * a.z - b.z * a.x, a.x * b.y - a.y * b.x])
+
 
 class Triangle:
     def __init__(self, points, normal=None, q=None):
@@ -65,14 +101,14 @@ class Triangle:
 
 class Shape:
     def __init__(self, path):
-        self.p = []  # Points ~ 10⁴
-        self.normals = []
-        self.q = []
+        self.p = []  # Points (around 10⁴ on examples)
+        self.normals = []  # Points normals (around 10⁴ on examples)
         self.triangles = []  # Each triangle is a size 3 list of points ~10⁴
-        self.tglIdOfPt = []
-        self.crclOfPt = []
+        self.tglIdOfPt = [] # tglIdOfPt[i] = ids of trianlges where point of id i appears
+        self.crclOfPt = [] # crclOfPt[i] contains all the triangles in tglIdOfPt[i] with a==i and b and c are consecutives
         self.M = [[]]
         self.S = []
+
         self.read(path)
         self.find_q()
         self.build_triangle_circles()
@@ -87,7 +123,7 @@ class Shape:
                     assert not read_vertices
                     words = line.split("   ")
                     assert len(words) == 4
-                    self.p.append(Point([float(words[1]), float(words[2]), float(words[3])]))
+                    self.p.append(Point3([float(words[1]), float(words[2]), float(words[3])]))
 
                 elif line[1] == "n":
                     if not read_vertices:
@@ -95,7 +131,7 @@ class Shape:
                         self.tglIdOfPt = [[] for i in range(len(self.p))]
                     words = line.split("   ")
                     assert len(words) == 4
-                    self.normals.append(Point([float(words[1]), float(words[2]), float(words[3])]))
+                    self.normals.append(Point3([float(words[1]), float(words[2]), float(words[3])]))
 
                 elif line[0] == "f":
                     words = line.split(" ")
@@ -114,7 +150,7 @@ class Shape:
         for i, triangle in enumerate(self.triangles):
 
             # Find normal to the triangle :
-            triangle.normal = Point.cross(self.p[triangle.b] - self.p[triangle.a],
+            triangle.normal = Point3.cross(self.p[triangle.b] - self.p[triangle.a],
                                           self.p[triangle.c] - self.p[triangle.a])
 
             # Check if triangle is obtuse
@@ -128,8 +164,8 @@ class Shape:
             else:
                 d = (self.p[triangle.b] - self.p[triangle.a]) / 2
                 e = (self.p[triangle.c] - self.p[triangle.a]) / 2
-                u = Point.cross(triangle.normal, self.p[triangle.b] - self.p[triangle.a])
-                v = Point.cross(triangle.normal, self.p[triangle.c] - self.p[triangle.a])
+                u = Point3.cross(triangle.normal, self.p[triangle.b] - self.p[triangle.a])
+                v = Point3.cross(triangle.normal, self.p[triangle.c] - self.p[triangle.a])
                 A = np.array([u.coord, v.coord]).transpose()
                 b = np.array((d-e).coord)
                 x, y = np.linalg.lstsq(A, b)[0]
@@ -158,6 +194,7 @@ class Shape:
             assert len(not_in_circle) == 0  # Double check
             self.crclOfPt.append(circle)
 
+    # Build matrices M and S
     def build_matrices(self):
         self.M = [[0. for j in range(len(self.p))] for i in range(len(self.p))]
         self.S = [0. for i in range(len(self.p))]
@@ -187,3 +224,45 @@ class Shape:
             self.S[i] = s
         for i in range(len(self.p)):
             self.M[i][i] = sum(self.M[i])
+
+    # Return the gps of point of index p
+    @staticmethod
+    def gps(eigs, vectors, p):
+        assert len(eigs) == len(vectors)
+        return Point([vectors[p][i]/(eigs[i]**0.5) for i in range(len(eigs))])
+
+    # Returns the gps of n randomly sampled points among the vertices (avec remise)
+    def sample_gps(self, eigs, vectors, n) :
+        points = [random.randint(0, len(self.p)-1) for i in range(n)]
+        return [Shape.gps(eigs, vectors, points[i]) for i in range(n)]
+
+    # Returns the histogram of all the distances between cloud and cloud2 with step "step"
+    @staticmethod
+    def compute_histogram(cloud, cloud2, step):
+        distances = []
+        for i in range(len(cloud)):
+            for j in range(i+1):
+                distances.append(Point.dist(cloud[i], cloud2[j]))
+        distances.sort()
+        res = Histogram(step, distances[0], distances[-1])
+        for v in distances :
+            res.add_occurence(v)
+        return res
+
+    # Returns a matrix (list of list) with the histograms constructed via the balls consturction
+    # Params :
+    # - d : dimensions kept in GPS = eigenvalues kept
+    # - m : number of balls
+    # - n : number of points sampled among the vertices
+    # - step : step used to build the histogram
+    def compute_histograms(self, d, m, n, step):
+        eigs, vectors = linalg.eigh(self.M, np.diag(self.S), eigvals=(0, d-1))  # Computes the d smallest eigenvalues
+        gps_points = self.sample_gps(eigs, vectors, n)
+        gps_points.sort(key = lambda x: x.norm())
+        clouds = [gps_points[i*(len(gps_points)/m) : (i+1)*len(gps_points)/m] for i in range(m)]
+        res = [[None]*i for i in range(m)]
+        for i in range(m):
+            for j in range(i+1):
+                Shape.compute_histogram(clouds[i], clouds[j], step)
+        return res
+
