@@ -6,7 +6,7 @@ from scipy import linalg
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
     def __init__(self, step, min, max):
-        assert(self.max - self.min) % step == 0
+        assert (max - min) % step == 0
         self.step = step
         self.min = min
         self.max = max
@@ -76,17 +76,15 @@ class Point :
     def __rmul__(self, other):
         return self * other
 
-class Point3(Point):
-    def __init__(self, coord):
-        assert len(coord) == 3
-        super().__init__(coord)
-        self.x = coord[0]
-        self.y = coord[1]
-        self.z = coord[2]
-
     @staticmethod
     def cross(a, b):
-        return Point([a.y * b.z - a.z * b.y, b.x * a.z - b.z * a.x, a.x * b.y - a.y * b.x])
+        assert a.dim == 3 and b.dim == 3
+        return Point([a.coord[1] * b.coord[2] - a.coord[2] * b.coord[1],
+                       b.coord[0] * a.coord[2] - b.coord[2] * a.coord[0],
+                       a.coord[0] * b.coord[1] - a.coord[1] * b.coord[0]])
+
+    def __str__(self):
+        return str(self.coord)
 
 
 class Triangle:
@@ -123,7 +121,7 @@ class Shape:
                     assert not read_vertices
                     words = line.split("   ")
                     assert len(words) == 4
-                    self.p.append(Point3([float(words[1]), float(words[2]), float(words[3])]))
+                    self.p.append(Point([float(words[1]), float(words[2]), float(words[3])]))
 
                 elif line[1] == "n":
                     if not read_vertices:
@@ -131,7 +129,7 @@ class Shape:
                         self.tglIdOfPt = [[] for i in range(len(self.p))]
                     words = line.split("   ")
                     assert len(words) == 4
-                    self.normals.append(Point3([float(words[1]), float(words[2]), float(words[3])]))
+                    self.normals.append(Point([float(words[1]), float(words[2]), float(words[3])]))
 
                 elif line[0] == "f":
                     words = line.split(" ")
@@ -150,7 +148,7 @@ class Shape:
         for i, triangle in enumerate(self.triangles):
 
             # Find normal to the triangle :
-            triangle.normal = Point3.cross(self.p[triangle.b] - self.p[triangle.a],
+            triangle.normal = Point.cross(self.p[triangle.b] - self.p[triangle.a],
                                           self.p[triangle.c] - self.p[triangle.a])
 
             # Check if triangle is obtuse
@@ -164,8 +162,8 @@ class Shape:
             else:
                 d = (self.p[triangle.b] - self.p[triangle.a]) / 2
                 e = (self.p[triangle.c] - self.p[triangle.a]) / 2
-                u = Point3.cross(triangle.normal, self.p[triangle.b] - self.p[triangle.a])
-                v = Point3.cross(triangle.normal, self.p[triangle.c] - self.p[triangle.a])
+                u = Point.cross(triangle.normal, self.p[triangle.b] - self.p[triangle.a])
+                v = Point.cross(triangle.normal, self.p[triangle.c] - self.p[triangle.a])
                 A = np.array([u.coord, v.coord]).transpose()
                 b = np.array((d-e).coord)
                 x, y = np.linalg.lstsq(A, b)[0]
@@ -228,7 +226,7 @@ class Shape:
     # Return the gps of point of index p
     @staticmethod
     def gps(eigs, vectors, p):
-        assert len(eigs) == len(vectors)
+        assert len(eigs) == len(vectors[0])
         return Point([vectors[p][i]/(eigs[i]**0.5) for i in range(len(eigs))])
 
     # Returns the gps of n randomly sampled points among the vertices (avec remise)
@@ -256,10 +254,17 @@ class Shape:
     # - n : number of points sampled among the vertices
     # - step : step used to build the histogram
     def compute_histograms(self, d, m, n, step):
+        print(self.S)
         eigs, vectors = linalg.eigh(self.M, np.diag(self.S), eigvals=(0, d-1))  # Computes the d smallest eigenvalues
+        print("EIGS")
+        print(eigs)
+        print(vectors)
         gps_points = self.sample_gps(eigs, vectors, n)
-        gps_points.sort(key = lambda x: x.norm())
-        clouds = [gps_points[i*(len(gps_points)/m) : (i+1)*len(gps_points)/m] for i in range(m)]
+        gps_points.sort(key=lambda x: x.norm())
+        print("GPS")
+        for e in gps_points:
+            print(e)
+        clouds = [gps_points[i*(len(gps_points)//m): (i+1)*len(gps_points)//m] for i in range(m)]
         res = [[None]*i for i in range(m)]
         for i in range(m):
             for j in range(i+1):
