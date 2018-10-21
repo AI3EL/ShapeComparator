@@ -2,29 +2,39 @@ import random
 
 import numpy as np
 from scipy import linalg
+from sklearn.manifold import MDS
 
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
     def __init__(self, step, min, max):
-        assert (max - min) % step == 0
+        #assert (max - min) % step == 0
+        #De step^min à stem^max
         self.step = step
         self.min = min
         self.max = max
-        self.size = (self.max - self.min) // step
-        self.occurences = [0] * self.size
+        self.size = (self.max - self.min)
+        self.bins = [0] * self.size
 
     def get_occurence(self, v):
-        return self.occurences[self.step * (v-self.min) // self.step]
+        return self.bins[v]
 
     def add_occurence(self, v, n=1):
-        self.occurences[self.step * (v - self.min) // self.step] += n
+        i=self.min;
+        while(v // pow(10,i) > 0):
+            i+=1;
+        if i!=self.min:
+            self.bins[i-(self.min+1)] += n
+        else:
+            self.bins[0] += n
 
     @staticmethod
     def dist(h1, h2):
         assert h1.step == h2.step
-        min = max(h1.min, h2.min)
-        max = min(h1.max, h2.max)
-        return sum([(h1.get_occurence(i) - h2.get_occurence(i))**2 for i in range(min, max, h1.step)])**0.5
+        assert h1.min == h2.min
+        assert h1.max == h2.max
+        #min = max(h1.min, h2.min)
+        #max = min(h1.max, h2.max)
+        return sum([(h1.get_occurence(i) - h2.get_occurence(i))**2 for i in range(0, h1.max-h1.min)])**0.5
 
 class Point :
     def __init__(self, coord):
@@ -241,8 +251,8 @@ class Shape:
         for i in range(len(cloud)):
             for j in range(i+1):
                 distances.append(Point.dist(cloud[i], cloud2[j]))
-        distances.sort()
-        res = Histogram(step, distances[0], distances[-1])
+        #distances.sort()
+        res = Histogram(step, -25, 0)
         for v in distances :
             res.add_occurence(v)
         return res
@@ -265,9 +275,23 @@ class Shape:
         for e in gps_points:
             print(e)
         clouds = [gps_points[i*(len(gps_points)//m): (i+1)*len(gps_points)//m] for i in range(m)]
-        res = [[None]*i for i in range(m)]
+        print("Calculs histogrammes")
+        histos = [[None]*m for i in range(m)]
+        lhistos = (m * (m+1)) // 2
+        dist = [[0]*lhistos for i in range(lhistos)]
         for i in range(m):
-            for j in range(i+1):
-                Shape.compute_histogram(clouds[i], clouds[j], step)
-        return res
+            for j in range(i):
+                histos[i][j] = Shape.compute_histogram(clouds[i], clouds[j], step)
+                histos[j][i] = Shape.compute_histogram(clouds[i], clouds[j], step)
+        print("Calcul distances")
+        for i in range(m):
+            for j in range(i):
+                for ip in range((i*(i+1))//2 + j):
+                    for jp in range(ip):
+                        dist[(i*(i+1))//2 + j][(ip*(ip+1))//2 + jp] = Histogram.dist(histos[i][j] , histos[ip][jp])
+                        dist[(ip*(ip+1))//2 + jp][(i*(i+1))//2 + j] = Histogram.dist(histos[i][j] , histos[ip][jp])
+        embedding = MDS(n_components=2)
+        arraydists = np.asarray(dist)
+        resultat = embedding.fit_transform(arraydists)
+        return resultat
 
