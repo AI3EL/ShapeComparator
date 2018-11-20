@@ -3,6 +3,7 @@ import random
 import numpy as np
 from scipy import linalg
 from sklearn.manifold import MDS
+import matplotlib.pyplot as plt
 
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
@@ -97,6 +98,19 @@ class Point :
         return str(self.coord)
 
 
+def blank_split(line):
+    i = 0
+    res = [""]
+    while i < len(line):
+        if line[i] == ' ':
+            res.append("")
+            while line[i] == ' ':
+                i+=1
+        else:
+            res[-1] += line[i]
+            i+=1
+    return res
+
 class Triangle:
     def __init__(self, points, normal=None, q=None):
         self.a = points[0]
@@ -106,6 +120,8 @@ class Triangle:
         self.points = points  # Indexes of the points
         self.q = q
 
+    def __str__(self):
+        return "Points : {0} , {1} , {2}, q = {3}, normal = {4}".format(self.a, self.b, self.c, self.q, self.normal)
 
 class Shape:
     def __init__(self, path):
@@ -129,7 +145,7 @@ class Shape:
             for line in file:
                 if line[0] == "v" and line[1] == " ":
                     assert not read_vertices
-                    words = line.split("   ")
+                    words = blank_split(line)
                     assert len(words) == 4
                     self.p.append(Point([float(words[1]), float(words[2]), float(words[3])]))
 
@@ -137,12 +153,12 @@ class Shape:
                     if not read_vertices:
                         read_vertices = True
                         self.tglIdOfPt = [[] for i in range(len(self.p))]
-                    words = line.split("   ")
+                    words = blank_split(line)
                     assert len(words) == 4
                     self.normals.append(Point([float(words[1]), float(words[2]), float(words[3])]))
 
                 elif line[0] == "f":
-                    words = line.split(" ")
+                    words = blank_split(line)
                     assert len(words) == 4
                     words = words[1:]
                     words[2] = words[2][0:-1]
@@ -264,34 +280,38 @@ class Shape:
     # - n : number of points sampled among the vertices
     # - step : step used to build the histogram
     def compute_histograms(self, d, m, n, step):
-        print(self.S)
         eigs, vectors = linalg.eigh(self.M, np.diag(self.S), eigvals=(0, d-1))  # Computes the d smallest eigenvalues
-        print("EIGS")
-        print(eigs)
-        print(vectors)
         gps_points = self.sample_gps(eigs, vectors, n)
         gps_points.sort(key=lambda x: x.norm())
-        print("GPS")
-        for e in gps_points:
-            print(e)
         clouds = [gps_points[i*(len(gps_points)//m): (i+1)*len(gps_points)//m] for i in range(m)]
         print("Calculs histogrammes")
         histos = [[None]*m for i in range(m)]
-        lhistos = (m * (m+1)) // 2
-        dist = [[0]*lhistos for i in range(lhistos)]
         for i in range(m):
-            for j in range(i):
+            for j in range(i+1):
                 histos[i][j] = Shape.compute_histogram(clouds[i], clouds[j], step)
-                histos[j][i] = Shape.compute_histogram(clouds[i], clouds[j], step)
-        print("Calcul distances")
         for i in range(m):
             for j in range(i):
-                for ip in range((i*(i+1))//2 + j):
-                    for jp in range(ip):
-                        dist[(i*(i+1))//2 + j][(ip*(ip+1))//2 + jp] = Histogram.dist(histos[i][j] , histos[ip][jp])
-                        dist[(ip*(ip+1))//2 + jp][(i*(i+1))//2 + j] = Histogram.dist(histos[i][j] , histos[ip][jp])
-        embedding = MDS(n_components=2)
+                histos[j][i] = histos[i][j]
+        return histos
+
+    @staticmethod
+    def plot_histos(histos):
+        n = len(histos)
+        m = len(histos[0])
+        print("Calcul distances")
+        dist = [[0]*n for i in range(n)]
+        for i in range(n):
+            for j in range(i):
+                for k in range(m):
+                    dist[i][j] += sum(Histogram.dist(histos[i][k][h], histos[j][k][h]) for h in range(m))
+        print("dists")
+        print(dist)
+        embedding = MDS()
         arraydists = np.asarray(dist)
         resultat = embedding.fit_transform(arraydists)
-        return resultat
+        print(resultat)
+        absc = [resultat[i][0] for i in range(len(resultat))]
+        ords = [resultat[i][1] for i in range(len(resultat))]
 
+        plt.plot(absc, ords)
+        plt.show()
