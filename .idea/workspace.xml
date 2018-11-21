@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test_shape.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_shape.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/MYDIR/pip-selfcheck.json" beforeDir="false" afterPath="$PROJECT_DIR$/venv/MYDIR/pip-selfcheck.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -16,11 +15,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="407">
-              <caret line="309" column="36" lean-forward="true" selection-start-line="309" selection-end-line="310" />
+            <state relative-caret-position="290">
+              <caret line="340" column="19" lean-forward="true" selection-start-line="340" selection-start-column="19" selection-end-line="340" selection-end-column="19" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -28,20 +27,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mds.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/sklearn/manifold/mds.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="167">
-              <caret line="401" column="8" selection-start-line="401" selection-start-column="8" selection-end-line="401" selection-end-column="8" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="test_shape.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="test_shape.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test_shape.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
+            <state relative-caret-position="105">
+              <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
               <folding>
                 <element signature="e#0#29#0" expanded="true" />
               </folding>
@@ -67,6 +57,9 @@
       <find>Point</find>
       <find>Point3</find>
       <find>print</find>
+      <find>self.M</find>
+      <find>self.S</find>
+      <find>animal_histos</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -75,16 +68,16 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/test_shape.py" />
         <option value="$PROJECT_DIR$/main.py" />
+        <option value="$PROJECT_DIR$/test_shape.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="75" />
-    <option name="y" value="-4" />
+  <component name="ProjectFrameBounds" extendedState="4">
+    <option name="x" value="65" />
+    <option name="y" value="24" />
     <option name="width" value="928" />
-    <option name="height" value="1084" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -160,51 +153,51 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 17m 12s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 16h 55m 34s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 19m 37s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 16h 59m 56s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 22m 38s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 04m 23s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 24m 58s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 14m 28s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 26m 30s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 17m 07s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 29m 20s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 28m 04s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 34m 36s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 28m 05s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 38m 27s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 30m 28s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 42m 41s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 34m 03s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.20 at 18h 49m 01s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 37m 09s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="1857" height="1092" extended-state="6" />
+    <frame x="65" y="24" width="928" height="1056" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.125" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.12486188" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32948583" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32984293" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.33945945" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.09945946" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39979014" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39979014" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -219,10 +212,57 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <option name="time" value="2" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3240">
+          <caret line="221" column="29" selection-start-line="221" selection-start-column="29" selection-end-line="221" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_shape.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4635">
+          <caret line="309" column="36" lean-forward="true" selection-start-line="309" selection-end-line="310" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/sklearn/manifold/mds.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5865">
+          <caret line="401" column="8" selection-start-line="401" selection-start-column="8" selection-end-line="401" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_shape.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2250">
@@ -405,29 +445,64 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test_shape.py">
+    <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/scipy/sparse/csr.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
-          <folding>
-            <element signature="e#0#29#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="-9">
+          <caret line="364" column="19" lean-forward="true" selection-start-line="364" selection-start-column="19" selection-end-line="364" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/scipy/sparse/lil.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="186">
+          <caret line="319" selection-start-line="319" selection-end-line="319" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/scipy/sparse/dia.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="186">
+          <caret line="124" selection-start-line="124" selection-end-line="124" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/numpy/lib/twodim_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="276">
+          <caret line="202" selection-start-line="201" selection-end-line="202" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/scipy/sparse/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="194">
+          <caret line="1164" selection-start-line="1164" selection-end-line="1164" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/venv/MYDIR/lib/python3.5/site-packages/sklearn/manifold/mds.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="167">
-          <caret line="401" column="8" selection-start-line="401" selection-start-column="8" selection-end-line="401" selection-end-column="8" />
+        <state relative-caret-position="-11">
+          <caret line="391" column="17" lean-forward="true" selection-start-line="391" selection-start-column="17" selection-end-line="391" selection-end-column="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="407">
-          <caret line="309" column="36" lean-forward="true" selection-start-line="309" selection-end-line="310" />
+        <state relative-caret-position="290">
+          <caret line="340" column="19" lean-forward="true" selection-start-line="340" selection-start-column="19" selection-end-line="340" selection-end-column="19" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_shape.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
           </folding>
         </state>
       </provider>

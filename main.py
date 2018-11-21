@@ -1,9 +1,10 @@
 import random
 
 import numpy as np
-from scipy import linalg
+from scipy.sparse import linalg
 from sklearn.manifold import MDS
 import matplotlib.pyplot as plt
+from scipy import sparse
 
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
@@ -140,6 +141,7 @@ class Shape:
 
     # Assumes vertices are all defined before triangles
     def read(self, path):
+        print("Reading")
         with open(path, "r") as file:
             read_vertices = False
             for line in file:
@@ -168,7 +170,8 @@ class Shape:
                     self.triangles.append(Triangle([int(words[i][0]) - 1 for i in range(3)]))
                     for j in range(3):
                         self.tglIdOfPt[int(words[j][0]) - 1].append(len(self.triangles)-1)
-
+        print("Number of points : " + str(len(self.p)))
+        print("Number of triangles : " + str(len(self.triangles)))
     # If the triangle is obtuse, q j is chosen to be the midpoint of the edge opposite to the obtuse angle
     def find_q(self):
         for i, triangle in enumerate(self.triangles):
@@ -196,6 +199,7 @@ class Shape:
                 triangle.q = d + x*u
 
     def build_triangle_circles(self):
+        print("Building triangle circles")
         for i in range(len(self.p)):
             not_in_circle = self.tglIdOfPt[i][1:]
             ref_triangle = self.triangles[self.tglIdOfPt[i][0]]
@@ -220,7 +224,8 @@ class Shape:
 
     # Build matrices M and S
     def build_matrices(self):
-        self.M = [[0. for j in range(len(self.p))] for i in range(len(self.p))]
+        print("Building matrices")
+        self.M = sparse.lil_matrix((len(self.p), len(self.p)))
         self.S = [0. for i in range(len(self.p))]
         for i in range(len(self.p)):
             circle = self.crclOfPt[i]
@@ -238,7 +243,7 @@ class Shape:
                 right_hyp = (self.p[right.c] - self.p[right.a]).norm()
                 assert right_hyp >= right_adj
                 beta = 1 / ((right_hyp / right_adj)**2 - 1) ** 0.5
-                self.M[i][left.c] = (alpha + beta) / 2
+                self.M[i, left.c] = (alpha + beta) / 2
 
                 # S
                 d = (self.p[left.b] - self.p[left.a]) / 2
@@ -246,9 +251,13 @@ class Shape:
                 s +=(self.p[left.a] - d).norm() * (left.q - d).norm() / 2 \
                   + (self.p[left.a] - e).norm() * (left.q - e).norm() / 2
             self.S[i] = s
-        for i in range(len(self.p)):
-            self.M[i][i] = sum(self.M[i])
 
+        self.M.tocsr()
+        tmp_sum = sparse.csr_matrix((1, len(self.p)))
+        for i in range(len(self.p)):
+            tmp_sum += self.M[i]
+        for i in range(len(self.p)):
+            self.M[i, i] = tmp_sum[0, i]
     # Return the gps of point of index p
     @staticmethod
     def gps(eigs, vectors, p):
@@ -280,7 +289,8 @@ class Shape:
     # - n : number of points sampled among the vertices
     # - step : step used to build the histogram
     def compute_histograms(self, d, m, n, step):
-        eigs, vectors = linalg.eigh(self.M, np.diag(self.S), eigvals=(0, d-1))  # Computes the d smallest eigenvalues
+        print("Diagonalizing")
+        eigs, vectors = linalg.eigsh(self.M, d, sparse.dia_matrix((self.S, [0]), shape=(len(self.p), len(self.p))))  # Computes the d smallest eigenvalues
         gps_points = self.sample_gps(eigs, vectors, n)
         gps_points.sort(key=lambda x: x.norm())
         clouds = [gps_points[i*(len(gps_points)//m): (i+1)*len(gps_points)//m] for i in range(m)]
@@ -294,24 +304,48 @@ class Shape:
                 histos[j][i] = histos[i][j]
         return histos
 
-    @staticmethod
-    def plot_histos(histos):
-        n = len(histos)
-        m = len(histos[0])
-        print("Calcul distances")
-        dist = [[0]*n for i in range(n)]
-        for i in range(n):
-            for j in range(i):
-                for k in range(m):
-                    dist[i][j] += sum(Histogram.dist(histos[i][k][h], histos[j][k][h]) for h in range(m))
-        print("dists")
-        print(dist)
-        embedding = MDS()
-        arraydists = np.asarray(dist)
-        resultat = embedding.fit_transform(arraydists)
-        print(resultat)
-        absc = [resultat[i][0] for i in range(len(resultat))]
-        ords = [resultat[i][1] for i in range(len(resultat))]
 
-        plt.plot(absc, ords)
-        plt.show()
+def compute_histos(name, i_max):
+    res = []
+    for i in range(1, i_max):
+        print("Beginning {0} histogram {1}".format(name, i))
+        animal = Shape("../{0}-poses/{0}-0{1}.obj".format(name, i))
+        res.append(animal.compute_histograms(2, 2, 100, 10))
+    return res
+
+
+def compute_dists(histos):
+    print("Calcul des distances")
+    n = len(histos)
+    m = len(histos[0])
+    dists = [[0]*n for i in range(n)]
+    for i in range(n):
+        for j in range(i):
+            for k in range(m):
+                dists[i][j] += sum(Histogram.dist(histos[i][k][h], histos[j][k][h]) for h in range(m))
+    return dists
+
+def plot_animals(names, n_shape):
+    assert len(names) == len(n_shape)
+    colors = ['r', 'g', 'b']
+    animal_histos = [compute_histos(names[i], n_shape[i]) for i in range(len(names))]
+
+    inline_animal_histos = []
+    for histo in animal_histos:
+        inline_animal_histos += histo
+    dists = compute_dists(inline_animal_histos)
+
+    embedding = MDS()
+    arraydists = np.asarray(dists)
+    resultat = embedding.fit_transform(arraydists)
+    print(resultat)
+
+    indices = [0]
+    for i in range(len(names)):
+        indices.append(indices[-1] + n_shape[i]-1)
+    for i in range(len(names)):
+        absc = [resultat[i][0] for i in range(indices[i], indices[i+1])]
+        ords = [resultat[i][1] for i in range(indices[i], indices[i+1])]
+        plt.plot(absc, ords, colors[i] + 'o')
+
+    plt.show()
