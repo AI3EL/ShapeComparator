@@ -5,6 +5,7 @@ from scipy.sparse import linalg
 from sklearn.manifold import MDS
 import matplotlib.pyplot as plt
 from scipy import sparse
+import os
 
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
@@ -208,6 +209,10 @@ class Shape:
             circle = [Triangle([i] + origin_neighbours, ref_triangle.normal, ref_triangle.q)]
 
             edge_point = origin_neighbours[1]
+            if i==182:
+                print(not_in_circle)
+                for t in not_in_circle:
+                    print(self.triangles[t])
             while edge_point != origin_neighbours[0]:
                 j = 0
                 while edge_point not in self.triangles[not_in_circle[j]].points:
@@ -237,12 +242,18 @@ class Shape:
                 assert left.c == right.b  # Check reorder worked
                 left_adj = abs(Point.scal(self.p[left.a] - self.p[left.b], (self.p[left.c] - self.p[left.b]).unit()))
                 left_hyp = (self.p[left.b] - self.p[left.a]).norm()
-                assert left_hyp >= left_adj
-                alpha = 1 / ((left_hyp / left_adj)**2 - 1) ** 0.5
+                assert left_hyp > left_adj
+                if left_adj == 0:  # When left triangle has a 90° angle at b
+                    alpha = 0.
+                else:
+                    alpha = 1 / ((left_hyp / left_adj)**2 - 1) ** 0.5
                 right_adj = abs(Point.scal(self.p[right.a] - self.p[right.c], (self.p[right.b] - self.p[right.c]).unit()))
                 right_hyp = (self.p[right.c] - self.p[right.a]).norm()
-                assert right_hyp >= right_adj
-                beta = 1 / ((right_hyp / right_adj)**2 - 1) ** 0.5
+                assert right_hyp > right_adj
+                if right_adj == 0:  # When right triangle has a 90° angle at c
+                    beta = 0.
+                else:
+                    beta = 1 / ((right_hyp / right_adj)**2 - 1) ** 0.5
                 self.M[i, left.c] = (alpha + beta) / 2
 
                 # S
@@ -305,12 +316,12 @@ class Shape:
         return histos
 
 
-def compute_histos(name, i_max):
+def compute_histos(pathes):
     res = []
-    for i in range(1, i_max):
-        print("Beginning {0} histogram {1}".format(name, i))
-        animal = Shape("../{0}-poses/{0}-0{1}.obj".format(name, i))
-        res.append(animal.compute_histograms(2, 2, 100, 10))
+    for path in pathes:
+        print("Beginning histogram {0}".format(path))
+        shape = Shape(path)
+        res.append(shape.compute_histograms(2, 2, 100, 10))
     return res
 
 
@@ -325,15 +336,23 @@ def compute_dists(histos):
                 dists[i][j] += sum(Histogram.dist(histos[i][k][h], histos[j][k][h]) for h in range(m))
     return dists
 
-def plot_animals(names, n_shape):
-    assert len(names) == len(n_shape)
-    colors = ['r', 'g', 'b']
-    animal_histos = [compute_histos(names[i], n_shape[i]) for i in range(len(names))]
+def plot_gps_mds(path):
+    print("Begin plot of path : " + path)
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+    dirs = os.listdir(path)
+    files = []
+    for dir in dirs:
+        assert os.path.isdir(path + '/' + dir)
+        files.append(os.listdir(path + '/' + dir))
+    pathes = []
+    for i in range(len(dirs)):
+        pathes += [path + '/' + dirs[i] + '/' + file for file in files[i]]
+    histos = [compute_histos(pathes) for i in range(len(dirs))]
 
-    inline_animal_histos = []
-    for histo in animal_histos:
-        inline_animal_histos += histo
-    dists = compute_dists(inline_animal_histos)
+    inline_histos = []
+    for histo in histos:
+        inline_histos += histo
+    dists = compute_dists(inline_histos)
 
     embedding = MDS()
     arraydists = np.asarray(dists)
@@ -341,11 +360,9 @@ def plot_animals(names, n_shape):
     print(resultat)
 
     indices = [0]
-    for i in range(len(names)):
-        indices.append(indices[-1] + n_shape[i]-1)
+    for i in range(len(dirs)):
+        indices.append(indices[-1] + len(files[i])-1)
     for i in range(len(names)):
         absc = [resultat[i][0] for i in range(indices[i], indices[i+1])]
         ords = [resultat[i][1] for i in range(indices[i], indices[i+1])]
         plt.plot(absc, ords, colors[i] + 'o')
-
-    plt.show()

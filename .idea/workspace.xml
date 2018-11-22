@@ -15,11 +15,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="290">
-              <caret line="340" column="19" lean-forward="true" selection-start-line="340" selection-start-column="19" selection-end-line="340" selection-end-column="19" />
+            <state relative-caret-position="303">
+              <caret line="215" column="22" selection-start-line="215" selection-end-line="216" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -27,11 +27,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_shape.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="test_shape.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test_shape.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+            <state relative-caret-position="90">
+              <caret line="6" column="29" selection-start-line="6" selection-start-column="29" selection-end-line="6" selection-end-column="29" />
               <folding>
                 <element signature="e#0#29#0" expanded="true" />
               </folding>
@@ -60,6 +60,7 @@
       <find>self.M</find>
       <find>self.S</find>
       <find>animal_histos</find>
+      <find>colors</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -68,13 +69,13 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/test_shape.py" />
+        <option value="$PROJECT_DIR$/main.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="4">
-    <option name="x" value="65" />
+    <option name="x" value="992" />
     <option name="y" value="24" />
     <option name="width" value="928" />
     <option name="height" value="1056" />
@@ -153,47 +154,47 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 16h 55m 34s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 38m 59s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 16h 59m 56s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 42m 01s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 04m 23s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 43m 11s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 14m 28s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 43m 58s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 17m 07s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 44m 50s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 28m 04s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 45m 10s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 28m 05s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 45m 40s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 30m 28s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 46m 33s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 34m 03s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 47m 12s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_test_shape_py - 2018.11.21 at 17h 37m 09s.xml">
+    <history-entry file="Unittests_in_test_shape_py - 2018.11.22 at 11h 48m 15s.xml">
       <configuration name="Unittests in test_shape.py" configurationId="tests" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="24" width="928" height="1056" extended-state="4" />
+    <frame x="992" y="24" width="928" height="1056" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.12486188" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.19558011" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32984293" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.33945945" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3491892" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.09945946" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -212,10 +213,30 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="2" />
+      <option name="time" value="3" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5100">
+          <caret line="340" column="19" lean-forward="true" selection-start-line="340" selection-start-column="19" selection-end-line="340" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_shape.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3240">
@@ -487,22 +508,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
+    <entry file="file://$PROJECT_DIR$/test_shape.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="290">
-          <caret line="340" column="19" lean-forward="true" selection-start-line="340" selection-start-column="19" selection-end-line="340" selection-end-column="19" />
+        <state relative-caret-position="90">
+          <caret line="6" column="29" selection-start-line="6" selection-start-column="29" selection-end-line="6" selection-end-column="29" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#29#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test_shape.py">
+    <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+        <state relative-caret-position="303">
+          <caret line="215" column="22" selection-start-line="215" selection-end-line="216" />
           <folding>
-            <element signature="e#0#29#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>

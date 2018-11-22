@@ -4,4 +4,5 @@ from main import *
 
 class TestShape(TestCase):
     def test_shape(self):
-        plot_animals(["lion", "elephant"], [6, 3])
+        plot_gps_mds("../test")
+        plt.show()
