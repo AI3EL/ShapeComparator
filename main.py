@@ -11,21 +11,21 @@ import os
 class Histogram :
     def __init__(self, step, min, max):
         #assert (max - min) % step == 0
-        #De step^min à stem^max
+        #De step^min à step^max
         self.step = step
         self.min = min
         self.max = max
         self.size = (self.max - self.min)
-        self.bins = [0] * self.size
+        self.bins = [0] * self.step
 
     def get_occurence(self, v):
         return self.bins[v]
 
     def add_occurence(self, v, n=1):
-        i=self.min;
+        i=self.min
         while(v // pow(10,i) > 0):
-            i+=1;
-        if i!=self.min:
+            i += 1
+        if i != self.min:
             self.bins[i-(self.min+1)] += n
         else:
             self.bins[0] += n
@@ -113,6 +113,7 @@ def blank_split(line):
             i+=1
     return res
 
+
 class Triangle:
     def __init__(self, points, normal=None, q=None):
         self.a = points[0]
@@ -125,20 +126,31 @@ class Triangle:
     def __str__(self):
         return "Points : {0} , {1} , {2}, q = {3}, normal = {4}".format(self.a, self.b, self.c, self.q, self.normal)
 
+
+class TrianglePair:
+    def __init__(self, a, b, c, q1, q2):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.q1 = q1
+        self.q2 = q2
+
+
 class Shape:
     def __init__(self, path):
         self.p = []  # Points (around 10⁴ on examples)
         self.normals = []  # Points normals (around 10⁴ on examples)
         self.triangles = []  # Each triangle is a size 3 list of points ~10⁴
         self.tglIdOfPt = [] # tglIdOfPt[i] = ids of trianlges where point of id i appears
-        self.crclOfPt = [] # crclOfPt[i] contains all the triangles in tglIdOfPt[i] with a==i and b and c are consecutives
+        self.crclOfPt = [] # crclOfPt[i] contains all the triangles in tglIdOfPt[i] with a==i and b and c are consecutives TODO : delete
+        self.tglPairOfPt = []
         self.M = [[]]
         self.S = []
 
         self.read(path)
         self.find_q()
-        self.build_triangle_circles()
-        self.build_matrices()
+        self.build_triangle_pairs()
+        self.build_matrices_from_pairs()
 
     # Assumes vertices are all defined before triangles
     def read(self, path):
@@ -173,6 +185,7 @@ class Shape:
                         self.tglIdOfPt[int(words[j][0]) - 1].append(len(self.triangles)-1)
         print("Number of points : " + str(len(self.p)))
         print("Number of triangles : " + str(len(self.triangles)))
+
     # If the triangle is obtuse, q j is chosen to be the midpoint of the edge opposite to the obtuse angle
     def find_q(self):
         for i, triangle in enumerate(self.triangles):
@@ -209,10 +222,7 @@ class Shape:
             circle = [Triangle([i] + origin_neighbours, ref_triangle.normal, ref_triangle.q)]
 
             edge_point = origin_neighbours[1]
-            if i==182:
-                print(not_in_circle)
-                for t in not_in_circle:
-                    print(self.triangles[t])
+
             while edge_point != origin_neighbours[0]:
                 j = 0
                 while edge_point not in self.triangles[not_in_circle[j]].points:
@@ -226,6 +236,45 @@ class Shape:
                 not_in_circle.pop(j)
             assert len(not_in_circle) == 0  # Double check
             self.crclOfPt.append(circle)
+
+    def build_triangle_pairs(self):
+
+        def next_triangle(point, circle):
+            for i in range(len(circle)):
+                triangle = self.triangles[circle[i]]
+                if point in triangle.points:
+                    return circle[i]
+            return -1
+
+        print("Building triangle pairs")
+        for i in range(len(self.p)):
+            circle = self.tglIdOfPt[i][:]
+            triangle_pairs = []
+
+            while circle:
+                ref_triangle = self.triangles[circle.pop()]
+                origin_neighbours = ref_triangle.points[:]
+                origin_neighbours.remove(i)
+
+                next_id = next_triangle(origin_neighbours[0], circle)
+                if next_id != -1:
+                    dual = self.triangles[next_id]
+                    dual_points = dual.points[:]
+                    dual_points.remove(i)
+                    dual_points.remove(origin_neighbours[0])
+                    triangle_pairs.append(TrianglePair(dual_points[0], origin_neighbours[0], origin_neighbours[1],
+                                                       dual.q, ref_triangle.q))
+
+                next_id = next_triangle(origin_neighbours[1], circle)
+                if next_id != -1:
+                    dual = self.triangles[next_id]
+                    dual_points = dual.points[:]
+                    dual_points.remove(i)
+                    dual_points.remove(origin_neighbours[1])
+                    triangle_pairs.append(TrianglePair(origin_neighbours[0], origin_neighbours[1], dual_points[0],
+                                                       ref_triangle.q, dual.q))
+
+            self.tglPairOfPt.append(triangle_pairs)
 
     # Build matrices M and S
     def build_matrices(self):
@@ -269,6 +318,48 @@ class Shape:
             tmp_sum += self.M[i]
         for i in range(len(self.p)):
             self.M[i, i] = tmp_sum[0, i]
+
+    # Build matrices M and S
+    def build_matrices_from_pairs(self):
+        print("Building matrices")
+        self.M = sparse.lil_matrix((len(self.p), len(self.p)))
+        self.S = [0. for i in range(len(self.p))]
+        for i in range(len(self.p)):
+            triangle_pairs = self.tglPairOfPt[i]
+            s = 0.
+            for tgl_pair in triangle_pairs:
+                # M
+                left_adj = abs(
+                    Point.scal(self.p[i] - self.p[tgl_pair.a], (self.p[tgl_pair.b] - self.p[tgl_pair.a]).unit()))
+                left_hyp = (self.p[tgl_pair.a] - self.p[i]).norm()
+                assert left_hyp > left_adj
+                if left_adj == 0:  # When left triangle has a 90° angle at b
+                    alpha = 0.
+                else:
+                    alpha = 1 / ((left_hyp / left_adj) ** 2 - 1) ** 0.5
+                right_adj = abs(
+                    Point.scal(self.p[i] - self.p[tgl_pair.c], (self.p[tgl_pair.b] - self.p[tgl_pair.c]).unit()))
+                right_hyp = (self.p[tgl_pair.c] - self.p[i]).norm()
+                assert right_hyp > right_adj
+                if right_adj == 0:  # When right triangle has a 90° angle at c
+                    beta = 0.
+                else:
+                    beta = 1 / ((right_hyp / right_adj) ** 2 - 1) ** 0.5
+                self.M[i, tgl_pair.b] = (alpha + beta) / 2
+
+                # S
+                d = (self.p[tgl_pair.b] + self.p[i]) / 2
+                s += (self.p[i] - d).norm() * (tgl_pair.q1 - d).norm() / 2 \
+                     + (self.p[i] - d).norm() * (tgl_pair.q2 - d).norm() / 2
+            self.S[i] = s
+
+        self.M.tocsr()
+        tmp_sum = sparse.csr_matrix((1, len(self.p)))
+        for i in range(len(self.p)):
+            tmp_sum += self.M[i]
+        for i in range(len(self.p)):
+            self.M[i, i] = tmp_sum[0, i]
+
     # Return the gps of point of index p
     @staticmethod
     def gps(eigs, vectors, p):
@@ -321,7 +412,7 @@ def compute_histos(pathes):
     for path in pathes:
         print("Beginning histogram {0}".format(path))
         shape = Shape(path)
-        res.append(shape.compute_histograms(2, 2, 100, 10))
+        res.append(shape.compute_histograms(10, 10, 100, 30))
     return res
 
 
@@ -347,12 +438,10 @@ def plot_gps_mds(path):
     pathes = []
     for i in range(len(dirs)):
         pathes += [path + '/' + dirs[i] + '/' + file for file in files[i]]
-    histos = [compute_histos(pathes) for i in range(len(dirs))]
+    print(pathes)
+    histos = compute_histos(pathes)
 
-    inline_histos = []
-    for histo in histos:
-        inline_histos += histo
-    dists = compute_dists(inline_histos)
+    dists = compute_dists(histos)
 
     embedding = MDS()
     arraydists = np.asarray(dists)
@@ -361,8 +450,8 @@ def plot_gps_mds(path):
 
     indices = [0]
     for i in range(len(dirs)):
-        indices.append(indices[-1] + len(files[i])-1)
-    for i in range(len(names)):
+        indices.append(indices[-1] + len(files[i]))
+    for i in range(len(dirs)):
         absc = [resultat[i][0] for i in range(indices[i], indices[i+1])]
         ords = [resultat[i][1] for i in range(indices[i], indices[i+1])]
         plt.plot(absc, ords, colors[i] + 'o')
