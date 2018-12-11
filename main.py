@@ -16,19 +16,16 @@ class Histogram :
         self.min = min
         self.max = max
         self.size = (self.max - self.min)
-        self.bins = [0] * self.step
+        self.bins = [0] * int((max-min)/step)
 
     def get_occurence(self, v):
         return self.bins[v]
 
     def add_occurence(self, v, n=1):
-        i=self.min
-        while(v // pow(10,i) > 0):
-            i += 1
-        if i != self.min:
-            self.bins[i-(self.min+1)] += n
-        else:
-            self.bins[0] += n
+        if not self.max > v >= self.min:
+            print(v)
+            assert 0
+        self.bins[int((v-self.min)/self.step)] += n
 
     @staticmethod
     def dist(h1, h2):
@@ -376,15 +373,17 @@ class Shape:
     def compute_histogram(cloud, cloud2, step):
         distances = []
         for i in range(len(cloud)):
-            for j in range(i+1):
+            for j in range(len(cloud2)):
                 distances.append(Point.dist(cloud[i], cloud2[j]))
-        #distances.sort()
-        res = Histogram(step, -25, 0)
-        for v in distances :
+        distances.sort()
+        print("Distnaces : ")
+        print(distances)
+        res = Histogram(step, 0, pow(10, -9))
+        for v in distances:
             res.add_occurence(v)
         return res
 
-    # Returns a matrix (list of list) with the histograms constructed via the balls consturction
+    # Returns a matrix (list of list) with the histograms constructed via the balls construction
     # Params :
     # - d : dimensions kept in GPS = eigenvalues kept
     # - m : number of balls
@@ -395,6 +394,9 @@ class Shape:
         eigs, vectors = linalg.eigsh(self.M, d, sparse.dia_matrix((self.S, [0]), shape=(len(self.p), len(self.p))))  # Computes the d smallest eigenvalues
         gps_points = self.sample_gps(eigs, vectors, n)
         gps_points.sort(key=lambda x: x.norm())
+        print("NORMS")
+        for p in gps_points:
+            print(p.norm())
         clouds = [gps_points[i*(len(gps_points)//m): (i+1)*len(gps_points)//m] for i in range(m)]
         print("Calculs histogrammes")
         histos = [[None]*m for i in range(m)]
@@ -412,7 +414,7 @@ def compute_histos(pathes):
     for path in pathes:
         print("Beginning histogram {0}".format(path))
         shape = Shape(path)
-        res.append(shape.compute_histograms(10, 10, 100, 30))
+        res.append(shape.compute_histograms(15, 1, 100, pow(10, -14)))
     return res
 
 
