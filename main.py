@@ -7,6 +7,15 @@ import matplotlib.pyplot as plt
 from scipy import sparse
 import os
 
+# TODO : faire un truc pour sauvegarder/lire
+# TODO : bien choisir le max
+# TODO : comprendre les warnings rouges habituels
+# TODO : comprendre le warning "RuntimeError: Factor is exactly singular"
+# TODO : mettre des labels pour les couleurs
+# TODO : comparaison avec shape-DNA
+# TODO : optimiser la construction de l'histogramme
+# TODO : but final : faire tourner sur http://segeval.cs.princeton.edu/
+
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
     def __init__(self, step, min, max):
@@ -22,10 +31,8 @@ class Histogram :
         return self.bins[v]
 
     def add_occurence(self, v, n=1):
-        if not self.max > v >= self.min:
-            print(v)
-            assert 0
-        self.bins[int((v-self.min)/self.step)] += n
+        if self.max > v >= self.min:
+            self.bins[int((v-self.min)/self.step)] += n
 
     @staticmethod
     def dist(h1, h2):
@@ -34,7 +41,7 @@ class Histogram :
         assert h1.max == h2.max
         #min = max(h1.min, h2.min)
         #max = min(h1.max, h2.max)
-        return sum([(h1.get_occurence(i) - h2.get_occurence(i))**2 for i in range(0, h1.max-h1.min)])**0.5
+        return sum([(h1.get_occurence(i) - h2.get_occurence(i))**2 for i in range(0, int((h1.max-h1.min)/h1.step))])**0.5
 
 class Point :
     def __init__(self, coord):
@@ -355,7 +362,8 @@ class Shape:
         for i in range(len(self.p)):
             tmp_sum += self.M[i]
         for i in range(len(self.p)):
-            self.M[i, i] = tmp_sum[0, i]
+            self.M[i, i] = - tmp_sum[0, i]
+        self.M = -self.M
 
     # Return the gps of point of index p
     @staticmethod
@@ -370,15 +378,12 @@ class Shape:
 
     # Returns the histogram of all the distances between cloud and cloud2 with step "step"
     @staticmethod
-    def compute_histogram(cloud, cloud2, step):
+    def compute_histogram(cloud, cloud2, step, min_, max_):
         distances = []
         for i in range(len(cloud)):
             for j in range(len(cloud2)):
                 distances.append(Point.dist(cloud[i], cloud2[j]))
-        distances.sort()
-        print("Distnaces : ")
-        print(distances)
-        res = Histogram(step, 0, pow(10, -9))
+        res = Histogram(step, min_, max_)
         for v in distances:
             res.add_occurence(v)
         return res
@@ -389,32 +394,48 @@ class Shape:
     # - m : number of balls
     # - n : number of points sampled among the vertices
     # - step : step used to build the histogram
-    def compute_histograms(self, d, m, n, step):
+    # - max : max norm of the points taken into account (determines the radius of the biggest sphere)
+    def compute_histograms(self, d, m, n, step, max_):
         print("Diagonalizing")
-        eigs, vectors = linalg.eigsh(self.M, d, sparse.dia_matrix((self.S, [0]), shape=(len(self.p), len(self.p))))  # Computes the d smallest eigenvalues
+        sphere_radius = max_/m
+        eigs, vectors = linalg.eigsh(self.M, d, sparse.dia_matrix((self.S, [0]), shape=(len(self.p), len(self.p))), sigma=0, which='LM')  # Computes the d smallest eigenvalues
+        eigs = eigs[1:]
+        vectors = vectors[:, 1:]
+
+        # Normalize vector
+        for i in range(vectors.shape[1]):
+            vectors[:, i] /= Point(vectors[:, i]).norm()
+
         gps_points = self.sample_gps(eigs, vectors, n)
         gps_points.sort(key=lambda x: x.norm())
-        print("NORMS")
-        for p in gps_points:
-            print(p.norm())
-        clouds = [gps_points[i*(len(gps_points)//m): (i+1)*len(gps_points)//m] for i in range(m)]
+        clouds = [[gps_points[j] for j in range(n) if sphere_radius*i < gps_points[j].norm() < sphere_radius*(i+1)]for i in range(m)]
         print("Calculs histogrammes")
         histos = [[None]*m for i in range(m)]
         for i in range(m):
             for j in range(i+1):
-                histos[i][j] = Shape.compute_histogram(clouds[i], clouds[j], step)
+                histos[i][j] = Shape.compute_histogram(clouds[i], clouds[j], step, sphere_radius*max(0, (j-i-1)), max_ + sphere_radius*max(0, (j-i-1)))
         for i in range(m):
             for j in range(i):
                 histos[j][i] = histos[i][j]
+        #print_histos(histos[0])
         return histos
 
+def print_histos(histo):
+    couleurs = ['b', 'r', 'g']
+    for j in range(1):
+        absc = [i*histo[j].step for i in range(int((histo[j].max -histo[j].min)/histo[j].step))]
+        ords = [histo[j].bins[i] for i in range(len(histo[j].bins))]
+        plt.plot(absc, ords, couleurs[j])
+    plt.show()
 
 def compute_histos(pathes):
     res = []
+    max_ = 3
+    step = max_ / 100.
     for path in pathes:
         print("Beginning histogram {0}".format(path))
         shape = Shape(path)
-        res.append(shape.compute_histograms(15, 1, 100, pow(10, -14)))
+        res.append(shape.compute_histograms(15, 8, 1000, step, max_))
     return res
 
 
@@ -442,9 +463,9 @@ def plot_gps_mds(path):
         pathes += [path + '/' + dirs[i] + '/' + file for file in files[i]]
     print(pathes)
     histos = compute_histos(pathes)
-
     dists = compute_dists(histos)
-
+    print("DIST")
+    print(dists)
     embedding = MDS()
     arraydists = np.asarray(dists)
     resultat = embedding.fit_transform(arraydists)
