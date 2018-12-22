@@ -1,4 +1,5 @@
 import random
+
 import numpy as np
 from scipy.sparse import linalg
 from sklearn.manifold import MDS
@@ -6,16 +7,26 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from scipy import sparse
 import os
-import kmeans
 
+# TODO : faire un truc pour sauvegarder/lire
+# TODO : bien choisir le max
+# TODO : comprendre les warnings rouges habituels
+# TODO : comprendre le warning "RuntimeError: Factor is exactly singular"
+# TODO : mettre des labels pour les couleurs
+# TODO : comparaison avec shape-DNA
+# TODO : optimiser la construction de l'histogramme
+# TODO : but final : faire tourner sur http://segeval.cs.princeton.edu/
 
 # max is not included : last interval is [max-2*step, max-step]
 class Histogram :
     def __init__(self, step, min, max):
+        #assert (max - min) % step == 0
+        #De step^min à step^max
         self.step = step
         self.min = min
         self.max = max
-        self.bins = [0] * (int((max-min)/step)+1)
+        self.size = (self.max - self.min)
+        self.bins = [0] * int((max-min)/step)
         self.not_in_range = 0
 
     def add_occurence(self, v, n=1):
@@ -189,7 +200,7 @@ class Shape:
     def read_off(self, path):
         print("Reading")
         with open(path, "r") as file:
-            assert file.readline()[:3] == "OFF"
+            assert file.readline() == "OFF"
             num_vertices, num_triangles, _ = [int(w) for w in blank_split(file.readline())]
             self.tglIdOfPt = [[] for i in range(num_vertices)]
 
@@ -197,7 +208,7 @@ class Shape:
                 line = file.readline()
                 words = blank_split(line)
                 assert len(words) == 3
-                self.p.append(Point([float(words[0]), float(words[1]), float(words[2])]))
+                self.p.append(Point([float(words[1]), float(words[2]), float(words[3])]))
 
             for i in range(num_triangles):
                 line = file.readline()
@@ -235,7 +246,7 @@ class Shape:
                 v = Point.cross(triangle.normal, self.p[triangle.c] - self.p[triangle.a])
                 A = np.array([u.coord, v.coord]).transpose()
                 b = np.array((d-e).coord)
-                x, y = np.linalg.lstsq(A, b, rcond=None)[0]
+                x, y = np.linalg.lstsq(A, b)[0]
                 triangle.q = d + x*u
 
     def build_triangle_circles(self):
@@ -316,23 +327,19 @@ class Shape:
                 left_adj = abs(
                     Point.scal(self.p[i] - self.p[tgl_pair.a], (self.p[tgl_pair.b] - self.p[tgl_pair.a]).unit()))
                 left_hyp = (self.p[tgl_pair.a] - self.p[i]).norm()
-                if left_hyp > left_adj: # does not happen sometime because of numeric errors
-                    if left_adj == 0:  # When left triangle has a 90° angle at b
-                        alpha = 0.
-                    else:
-                        alpha = 1 / ((left_hyp / left_adj) ** 2 - 1) ** 0.5
+                assert left_hyp > left_adj
+                if left_adj == 0:  # When left triangle has a 90° angle at b
+                    alpha = 0.
                 else:
-                    alpha = 0.0
+                    alpha = 1 / ((left_hyp / left_adj) ** 2 - 1) ** 0.5
                 right_adj = abs(
                     Point.scal(self.p[i] - self.p[tgl_pair.c], (self.p[tgl_pair.b] - self.p[tgl_pair.c]).unit()))
                 right_hyp = (self.p[tgl_pair.c] - self.p[i]).norm()
-                if right_hyp > right_adj:
-                    if right_adj == 0:  # When right triangle has a 90° angle at c
-                        beta = 0.
-                    else:
-                        beta = 1 / ((right_hyp / right_adj) ** 2 - 1) ** 0.5
+                assert right_hyp > right_adj
+                if right_adj == 0:  # When right triangle has a 90° angle at c
+                    beta = 0.
                 else:
-                    beta = 0.0
+                    beta = 1 / ((right_hyp / right_adj) ** 2 - 1) ** 0.5
                 self.M[i, tgl_pair.b] = (alpha + beta) / 2
 
                 # S
@@ -394,11 +401,11 @@ class Shape:
         gps_points = self.sample_gps(eigs, vectors, n)
         gps_points.sort(key=lambda x: x.norm())
         clouds = [[gps_points[j] for j in range(n) if sphere_radius*i < gps_points[j].norm() < sphere_radius*(i+1)]for i in range(m)]
+        print("Calculs histogrammes")
         histos = [[None]*m for i in range(m)]
         print("Number of points by sphere :")
         print([len(cloud) for cloud in clouds])
         total_not_in_range = 0
-        print("Computing histograms")
         for i in range(m):
             for j in range(i+1):
                 histos[i][j] = Shape.compute_histogram(clouds[i], clouds[j], step, sphere_radius*max(0, (i-j-1)), sphere_radius*(i+j+2))
@@ -417,10 +424,9 @@ class Shape:
         return eigs
 
 def print_histo(histo):
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet', "khaki", "teal", "grey", "pink", "purple",
-              "silver", "gold", "lime", "springgreen", "salmon", "slateblue", "crimson"]
-    for j in range(min(len(histo), len(colors))):
-        absc = [i*histo[j].step for i in range(int((histo[j].max -histo[j].min)/histo[j].step)+1)]
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet']
+    for j in range(min(len(histo), 4)):
+        absc = [i*histo[j].step for i in range(int((histo[j].max -histo[j].min)/histo[j].step))]
         ords = [histo[j].bins[i] for i in range(len(histo[j].bins))]
         plt.plot(absc, ords, color=colors[j])
     plt.show()
@@ -453,14 +459,14 @@ def compute_dists_dna(eigs):
 
 
 def compute_histos(pathes):
-    m = 7
+    m = 10
     res = []
-    max_ = 1.5
-    step = max_ * m / 5000.0
+    max_ = 2
+    step = max_ * m / 50.0
     for path in pathes:
         print("Beginning histogram {0}".format(path))
         shape = Shape(path)
-        res.append(shape.compute_histograms(25, m, 1000, step, max_))
+        res.append(shape.compute_histograms(15, m, 1000, step, max_))
     return res
 
 
@@ -479,8 +485,7 @@ def compute_dists_gps(histos):
 
 def plot_gps_mds(path):
     print("Begin plot of path : " + path)
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet', "khaki", "teal", "grey", "pink", "purple",
-              "silver", "gold", "lime", "springgreen", "salmon", "slateblue", "crimson"]
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet']
     dirs = os.listdir(path)
     files = []
     for dir in dirs:
@@ -500,14 +505,7 @@ def plot_gps_mds(path):
         for j in range(len(files[i])):
             groups[-1].append(counter)
             counter += 1
-    histo_points =[]
-    for histo in histos:
-        histo_coordinates = []
-        for hist in histo:
-            for h in hist:
-                for b in h.bins:
-                    histo_coordinates.append(b)
-        histo_points.append(Point(histo_coordinates))
+    histo_points = [[h.to_point() for h in histo] for histo in histos]
     error = compute_error(histo_points, groups)
     print("Error : " + str(error))
     embedding = MDS()
@@ -523,15 +521,14 @@ def plot_gps_mds(path):
         absc = [resultat[i][0] for i in range(indices[i], indices[i+1])]
         ords = [resultat[i][1] for i in range(indices[i], indices[i+1])]
         plt.plot(absc, ords, color=colors[i], marker='o', linestyle='')
-        legend.append(mpatches.Patch(color=colors[i], label=dirs[i]))
+        legend.append(mpatches.Patch(color=colors[i], label=dirs[i][:-6]))
     plt.legend(handles=legend)
 
 
 def plot_dna_mds(path):
-    d = 200
+    d = 15
     print("Begin plot of path : " + path)
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet', "khaki", "teal", "grey", "pink", "purple",
-              "silver", "gold", "lime", "springgreen", "salmon", "slateblue", "crimson"]
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet']
     dirs = os.listdir(path)
     files = []
     for dir in dirs:
@@ -551,9 +548,7 @@ def plot_dna_mds(path):
         for j in range(len(files[i])):
             groups[-1].append(counter)
             counter += 1
-    eigv_points = []
-    for eigv in eigvs:
-        eigv_points.append(Point(eigv))
+    eigv_points = [Point(eigv) for eigv in eigvs]
     error = compute_error(eigv_points, groups)
     print("Error : " + str(error))
     embedding = MDS()
@@ -568,7 +563,7 @@ def plot_dna_mds(path):
         absc = [resultat[i][0] for i in range(indices[i], indices[i + 1])]
         ords = [resultat[i][1] for i in range(indices[i], indices[i + 1])]
         plt.plot(absc, ords, color=colors[i], marker='o', linestyle='')
-        legend.append(mpatches.Patch(color=colors[i], label=dirs[i]))
+        legend.append(mpatches.Patch(color=colors[i], label=dirs[i][:-6]))
     plt.legend(handles=legend)
 
 
@@ -588,15 +583,15 @@ def compute_error(points, labelled):
     res = 0.0
 
     # Defining centroids
-    centroids = [Point([0.0]*points[0].dim)]*len(labelled)
+    centroids = [Point([0.0]*points[0].dim)]
     for i in range(len(labelled)):
-        for j in range(len(labelled[i])):
+        for j in range(labelled[i]):
             centroids[i] += points[labelled[i][j]]
         centroids[i] /= len(labelled[i])
 
     # Adding dists to centroids to error
     for i in range(len(labelled)):
-        for j in range(len(labelled[i])):
+        for j in range(labelled[i]):
             res += Point.dist(centroids[i], points[labelled[i][j]]) ** 2
 
     # Adding inverse of dists among centroids
@@ -604,146 +599,4 @@ def compute_error(points, labelled):
         for j in range(i):
             res += 1/Point.dist(centroids[i], centroids[j])
 
-    return res/(len(points))
-
-
-def find_clusters_off(path):
-    print("Begin cluster off files : " + path)
-    dirs = os.listdir(path)
-    files = []
-    for dir in dirs:
-        assert os.path.isdir(path + '/' + dir)
-        files.append(os.listdir(path + '/' + dir))
-    pathes = []
-    for i in range(len(dirs)):
-        pathes += [path + '/' + dirs[i] + '/' + file for file in files[i]]
-    print(pathes)
-
-    histos = compute_histos(pathes)
-    histo_points = []
-    for histo in histos:
-        histo_coordinates = []
-        for hist in histo:
-            for h in hist:
-                for b in h.bins:
-                    histo_coordinates.append(b)
-        histo_points.append(Point(histo_coordinates))
-    max_coordinates = [max([p.coord[i] for p in histo_points]) for i in range(histo_points[0].dim)]
-    compactness, centroids, labels, cluster_sizes = kmeans.kmeans(histo_points, len(dirs), 7, 0.00001, 10, max_coordinates)
-    groups = []
-    counter = 0
-    for i in range(len(dirs)):
-        groups.append([])
-        for j in range(len(files[i])):
-            groups[-1].append(counter)
-            counter += 1
-    print("Labels :")
-    print(labels)
-    print("VS groups :")
-    print(groups)
-
-def compare_histos(histo_list, names):
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet', "khaki", "teal", "grey", "pink", "purple",
-              "silver", "gold", "lime", "springgreen", "salmon", "slateblue", "crimson"]
-    for i in range(len(histo_list[0])):
-        for j in range(len(histo_list[0][i])):
-            ords_list = []
-            legend = []
-            for l, histo in enumerate(histo_list):
-                absc = [k * histo[i][j].step for k in range(len(histo[i][j].bins))]
-                ords_list.append([histo[i][j].bins[k] for k in range(len(histo[i][j].bins))])
-                legend.append(mpatches.Patch(color=colors[l], label=names[l]))
-            for l, ords in enumerate(ords_list):
-                plt.plot(absc, ords, color=colors[l])
-            plt.legend(handles=legend)
-            plt.show()
-
-
-def compare_lions(path):
-    files = os.listdir(path)
-    print(files)
-    pathes = [path + '/' + file for file in files]
-    histos = compute_histos(pathes)
-    compare_histos(histos, [file[:-4] for file in files])
-
-
-def full_GPS_test(path):
-    print("Begin full GPS test : " + path)
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'chocolate', 'violet', "khaki", "teal", "grey", "pink", "purple",
-              "silver", "gold", "lime", "springgreen", "salmon", "slateblue", "crimson"]
-    dirs = os.listdir(path)
-    files = []
-    for dir in dirs:
-        assert os.path.isdir(path + '/' + dir)
-        files.append(os.listdir(path + '/' + dir))
-    pathes = []
-    for i in range(len(dirs)):
-        pathes += [path + '/' + dirs[i] + '/' + file for file in files[i]]
-    print(pathes)
-
-    histos = compute_histos(pathes)
-    dists = compute_dists_gps(histos)
-    groups = []
-    counter = 0
-    for i in range(len(dirs)):
-        groups.append([])
-        for j in range(len(files[i])):
-            groups[-1].append(counter)
-            counter += 1
-    histo_points = []
-    for histo in histos:
-        histo_coordinates = []
-        for hist in histo:
-            for h in hist:
-                for b in h.bins:
-                    histo_coordinates.append(b)
-        histo_points.append(Point(histo_coordinates))
-
-    error = compute_error(histo_points, groups)
-    print("Error : " + str(error))
-    embedding = MDS()
-    arraydists = np.asarray(dists)
-    resultat = embedding.fit_transform(arraydists)
-    indices = [0]
-    for i in range(len(dirs)):
-        indices.append(indices[-1] + len(files[i]))
-    legend = []
-    for i in range(len(dirs)):
-        absc = [resultat[i][0] for i in range(indices[i], indices[i + 1])]
-        ords = [resultat[i][1] for i in range(indices[i], indices[i + 1])]
-        plt.plot(absc, ords, color=colors[i], marker='o', linestyle='')
-        legend.append(mpatches.Patch(color=colors[i], label=dirs[i]))
-    plt.legend(handles=legend)
-    plt.show()
-
-    max_coordinates = [max([p.coord[i] for p in histo_points]) for i in range(histo_points[0].dim)]
-    compactness, centroids, labels, cluster_sizes = kmeans.kmeans(histo_points, len(dirs), 15, 0.00001, 20,
-                                                                  max_coordinates)
-
-    print("Labels :")
-    print(labels)
-    print("VS groups :")
-    print(groups)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return res
